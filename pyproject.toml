@@ -1,0 +1,10 @@
+[project]
+name = "fintual-portfolio-rebalance"
+version = "0.1.0"
+requires-python = ">=3.15"
+dependencies = []
+
+[dependency-groups]
+dev = [
+    "pytest>=9.2.0",
+]

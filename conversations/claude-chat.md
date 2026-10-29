@@ -13,10 +13,10 @@ código, con la idea de lograr una solución que destaque sin caer en
 sobre-ingeniería en un problema simple. De esa revisión elegí una mejora para
 aplicar: devolver las ventas antes que las compras.
 
-La conversación se reproduce textual hasta el paso 6. Las partes omitidas están
-marcadas con notas `[...]`: documentos personales adjuntos a mi primer mensaje,
-sin relación con la tarea, una parte sobre cómo exportar esta conversación y el
-tramo final, que se resume al cierre.
+La conversación se reproduce textual. Las partes omitidas están marcadas con
+notas `[...]`: documentos personales adjuntos a mi primer mensaje, sin relación
+con la tarea, algunos intercambios sobre cómo exportar y presentar esta
+conversación, y el tramo final, que se resume al cierre.
 
 ---
 
@@ -749,4 +749,77 @@ Para la entrevista técnica, tus mejores argumentos son la unión de conjuntos p
 
 ---
 
-[Se omitió el resto de la conversación: una revisión crítica del código antes de entregar, de la que elegí aplicar la mejora de devolver las ventas antes que las compras (Claude propuso la línea y el test), y la creación del repo en GitHub.]
+**Jorge:**
+
+Ok, antes quisiera preguntarte algo.
+
+Primero que todo sale en el enunciado esto:
+
+"El código además de resolver el problema, será un reflejo de qué tanto orgullo te causa tu solución."
+
+Quisiera saber qué opinas sobre nuestro codigo, porque mi idea es destacarme, dentro de lo razonable porque tampoco quiero incurrir en sobreingenieria sobre un desafio relativamente simple.
+
+[Se omitió una parte sobre cómo presentar estas conversaciones.]
+
+---
+
+**Claude:**
+
+## 1. Mi opinión sobre el código
+
+Está bien resuelto: es correcto, legible, valida los datos y tiene tests de propiedades, que no son lo habitual en una tarea así. Para un revisor ya es una buena entrega. Igual hay detalles que se pueden pulir, y algunos dan buenos puntos sin caer en sobre-ingeniería.
+
+**Vale la pena hacer (son cambios chicos con buen argumento):**
+1. **Vender antes de comprar.** Hoy las órdenes salen ordenadas por símbolo. En la práctica, primero vendes para tener la plata con que compras. Ordenar las ventas primero es una línea de código y muestra que entiendes el dominio.
+2. **Eliminar la lógica duplicada.** `total_value()` y `rebalance()` calculan el total por separado. Un helper privado que reciba los precios evita que diverjan.
+3. **Precios con `float`.** Si alguien crea `Stock("META", 500.0)`, la multiplicación `Decimal * float` lanza un `TypeError` poco claro. Conviene validar el tipo con un mensaje claro, o convertir el valor.
+
+**Mejor dejarlo en el README como "qué haría después" que implementarlo:**
+- Un **umbral mínimo de desviación**, para no generar órdenes de $0,03. En un producto real como el de Fintual eso importa, y nombrarlo muestra criterio de producto.
+- Acciones enteras, efectivo disponible y comisiones.
+
+**No haría:** interfaces abstractas para proveedores de precios, CLI, logging ni configuración. Eso sí sería sobre-ingeniería.
+
+Lo que más te va a destacar es poder explicar y defender cada línea, más que el código en sí. Las siguientes etapas son programar en vivo sin IA y conversar con el manager.
+
+[Se omitió una parte sobre cómo presentar estas conversaciones.]
+
+¿Qué mejoras quieres aplicar? Si te animas a implementar alguna tú, te sugiero la de vender antes de comprar, porque es la más acotada.
+
+---
+
+**Jorge:**
+
+ok, vamos con esa
+
+---
+
+**Claude:**
+
+La idea es que la implementes tú y me la pases para revisarla. Así queda en la transcripción como aporte tuyo.
+
+## Qué hay que lograr
+
+Hoy `rebalance()` devuelve las órdenes ordenadas solo por símbolo. Queremos que salgan **primero todas las ventas y después todas las compras**, y que dentro de cada grupo se mantenga el orden por símbolo para que el resultado siga siendo determinístico.
+
+## Pistas, de menos a más
+
+Úsalas solo si te quedas pegado.
+
+1. El cambio va al final de `rebalance()`, en el `return` o justo antes. No hace falta tocar el bucle.
+2. `sorted()` acepta una `key`. Si la `key` devuelve una tupla, Python ordena por el primer elemento y, en caso de empate, por el segundo.
+3. Para el primer elemento de la tupla necesitas algo que ponga SELL antes que BUY. Un booleano sirve, porque `False < True`.
+
+## También agrega un test
+
+En `tests/test_portfolio.py` agrega un test que verifique el orden. Usa un caso donde el orden por símbolo y el orden venta→compra no coincidan, para que el test realmente pruebe algo. Por ejemplo, AAPL se compra y META se vende: por símbolo, AAPL saldría primero, pero queremos META primero.
+
+Te recomiendo **escribir el test antes** de cambiar el código y verificar que falle. Así compruebas que el test detecta el problema. Después haces el cambio y confirmas que pasa.
+
+Actualiza también el docstring de `rebalance()` y la línea de *"Deterministic output"* del README para que digan "sells first, then buys, each sorted by symbol".
+
+Cuando lo tengas, pégame el código y el test, y lo revisamos.
+
+---
+
+[Se omitió el resto de la conversación. Después vinieron la creación del repo en GitHub y los ajustes finales al código, los tests y el README.]

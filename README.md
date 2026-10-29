@@ -27,8 +27,8 @@ portfolio = Portfolio(
 )
 
 portfolio.rebalance()
-# [Trade(symbol='AAPL', action=BUY,  quantity=7,   amount=1400),
-#  Trade(symbol='META', action=SELL, quantity=2.8, amount=1400)]
+# [Trade(symbol='META', action=SELL, quantity=2.8, amount=1400),
+#  Trade(symbol='AAPL', action=BUY,  quantity=7,   amount=1400)]
 ```
 
 ## Approach
@@ -52,6 +52,9 @@ always equals money spent on purchases: rebalancing needs no extra cash.
 - **`rebalance()` returns trades instead of executing them.** It is easier
   to test, keeps the portfolio unchanged, and mirrors how a real system
   would work: propose orders first, execute them separately.
+- **Sells first, then buys.** Sells free up the cash needed for the buys.
+  Within each group, trades are sorted by symbol so the output is
+  deterministic.
 - **One price snapshot per rebalance.** `current_price()` is called once per
   stock, so the total and every trade use the same prices even if they
   came from a live feed.
@@ -62,7 +65,6 @@ always equals money spent on purchases: rebalancing needs no extra cash.
 - **Validation in the constructor.** An invalid portfolio (weights not
   summing to 1, negative weights or quantities, non-positive prices)
   cannot be created, so `rebalance()` can trust its data.
-- **Deterministic output.** Trades are sorted by symbol.
 
 ## Assumptions and limitations
 
@@ -78,15 +80,25 @@ always equals money spent on purchases: rebalancing needs no extra cash.
   stored value. In a real app it would query a price provider without
   changes to `Portfolio`.
 
+## What I'd do next
+
+- **Minimum drift threshold**, so the portfolio is only rebalanced when it
+  has drifted enough, avoiding tiny trades that cost more than they help.
+- **Whole shares, available cash and commissions**, for brokers that
+  don't support fractional shares.
+
 ## Tests
 
-Besides specific examples (including the one above), two tests check
-properties that must always hold: total bought equals total sold, and
-applying the trades leaves the portfolio exactly at its target allocation.
+Besides specific examples (including the one above) and the order of the
+trades, two tests check properties that must always hold: total bought
+equals total sold, and applying the trades leaves the portfolio exactly at
+its target allocation.
 
 ## Use of LLMs
 
-I worked through this task with Claude. I defined the design decisions
-(language, fractional shares, returning trades instead of executing them,
-which edge cases to cover), reviewed every part of the code and validated
-it with the tests. The full conversations are in `conversations/`.
+I worked through this task with Claude as a pair programmer, going step by
+step so I could understand each part before moving on. Claude proposed the
+approach, the design and most of the code; I reviewed each proposal, ran the
+code and the tests, asked for a critical review before submitting, and chose
+which improvement to apply. The conversation is in
+[`conversations/claude-chat.md`](conversations/claude-chat.md).

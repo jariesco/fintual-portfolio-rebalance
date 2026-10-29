@@ -86,6 +86,13 @@ def test_empty_portfolio_returns_no_trades():
     assert p.rebalance() == []
 
 
+def test_sells_come_before_buys():
+    # By symbol AAPL (buy) would come first; sells must go first instead.
+    p = Portfolio({META: D("10"), AAPL: D("20")}, {META: D("0.4"), AAPL: D("0.6")})
+    actions = [t.action for t in p.rebalance()]
+    assert actions == [Action.SELL, Action.BUY]
+
+
 # --- validation ------------------------------------------------------------
 
 def test_weights_must_sum_to_one():
